@@ -1,0 +1,349 @@
+/* Registration-only layout and form styles. The login page keeps style.css unchanged. */
+.register-layout {
+  width: min(1180px, calc(100% - 48px));
+  min-height: calc(100vh - 84px);
+  margin: 0 auto;
+  padding: clamp(28px, 5vh, 64px) 0 64px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 520px);
+  align-items: center;
+  gap: clamp(32px, 6vw, 88px);
+  position: relative;
+  z-index: 1;
+}
+
+.register-intro {
+  min-width: 0;
+  max-width: 540px;
+}
+
+.register-intro > .eyebrow {
+  margin-bottom: 12px;
+}
+
+.register-intro h1 {
+  color: #f5f8ff;
+  font-size: clamp(36px, 4.3vw, 58px);
+  font-weight: 700;
+  letter-spacing: -1.8px;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.register-intro h1 span {
+  color: transparent;
+  background: linear-gradient(90deg, #39e5a5, #58aaff, #a3d4ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.register-intro > .muted {
+  max-width: 470px;
+  margin-top: 18px;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.benefit-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.benefit-list > div {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  padding: 15px 17px;
+  border: 1px solid rgba(150, 194, 240, 0.13);
+  border-radius: 15px;
+  background: rgba(7, 19, 38, 0.5);
+}
+
+.benefit-list > div > span {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(54, 224, 160, 0.24);
+  border-radius: 13px;
+  background: rgba(54, 224, 160, 0.09);
+  color: #52e5b1;
+  font-size: 20px;
+}
+
+.benefit-list > div > div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.benefit-list b {
+  color: #f1f7ff;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.benefit-list small {
+  color: #a3b5cc;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.register-card {
+  width: 100%;
+  max-width: 520px;
+  justify-self: center;
+  padding: clamp(24px, 3vw, 38px);
+}
+
+.register-card > .eyebrow {
+  margin-bottom: 8px;
+}
+
+.register-card h2 {
+  font-size: clamp(25px, 2.5vw, 32px);
+}
+
+.register-card > .muted {
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+.register-card .form-stack {
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.register-card .form-grid {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 14px;
+}
+
+.register-card .form-grid > label,
+.register-card fieldset > label {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #d3e1f0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.register-card input:not([type="checkbox"]),
+.register-card select,
+.register-card textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid rgba(150, 186, 222, 0.2);
+  border-radius: 11px;
+  outline: none;
+  background: rgba(2, 12, 26, 0.72);
+  color: #f1f7ff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 400;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.register-card select {
+  padding-right: 36px;
+  color-scheme: dark;
+}
+
+.register-card textarea {
+  min-height: 82px;
+  padding: 12px 14px;
+  resize: vertical;
+}
+
+.register-card input::placeholder,
+.register-card textarea::placeholder {
+  color: #7188a3;
+}
+
+.register-card input:not([type="checkbox"]):focus,
+.register-card select:focus,
+.register-card textarea:focus {
+  border-color: #36e0a0;
+  box-shadow: 0 0 0 4px rgba(54, 224, 160, 0.12);
+}
+
+.register-card fieldset {
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid rgba(150, 186, 222, 0.2);
+  border-radius: 13px;
+}
+
+.register-card legend {
+  padding: 0 7px;
+  color: #d3e1f0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.register-card .check-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 14px;
+}
+
+.register-card .check-label {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  color: #c4d4e7;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.register-card input[type="checkbox"] {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  accent-color: #36e0a0;
+}
+
+.register-card .btn-full {
+  width: 100%;
+  min-height: 48px;
+}
+
+.register-card .form-message {
+  min-height: 0;
+  margin-top: -8px;
+  overflow-wrap: anywhere;
+}
+
+.register-card .auth-foot {
+  margin-top: 22px;
+  text-align: center;
+}
+
+.register-card .tiny-note {
+  margin-top: 16px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 900px) {
+  .register-layout {
+    width: min(720px, calc(100% - 40px));
+    min-height: auto;
+    padding: 28px 0 48px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+
+  .register-intro {
+    max-width: 640px;
+  }
+
+  .register-intro h1 {
+    font-size: clamp(34px, 6vw, 48px);
+  }
+
+  .benefit-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 22px;
+  }
+
+  .benefit-list > div {
+    grid-template-columns: 36px minmax(0, 1fr);
+    align-items: start;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .benefit-list > div > span {
+    width: 34px;
+    height: 34px;
+    font-size: 17px;
+  }
+
+  .benefit-list b {
+    font-size: 12px;
+  }
+
+  .benefit-list small {
+    font-size: 11px;
+  }
+
+  .register-card {
+    justify-self: center;
+  }
+}
+
+@media (max-width: 560px) {
+  .register-layout {
+    width: calc(100% - 32px);
+    padding-top: 20px;
+    gap: 22px;
+  }
+
+  .register-intro h1 {
+    font-size: clamp(31px, 9vw, 40px);
+    letter-spacing: -1.2px;
+  }
+
+  .register-intro > .muted {
+    margin-top: 12px;
+    font-size: 13px;
+  }
+
+  .benefit-list {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 9px;
+    margin-top: 18px;
+  }
+
+  .benefit-list > div {
+    grid-template-columns: 38px minmax(0, 1fr);
+    align-items: center;
+    padding: 11px 13px;
+  }
+
+  .benefit-list > div > span {
+    width: 36px;
+    height: 36px;
+  }
+
+  .register-card {
+    padding: 24px 18px;
+    border-radius: 19px;
+  }
+
+  .register-card .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 15px;
+  }
+
+  .register-card fieldset {
+    padding: 13px;
+  }
+
+  .register-card .check-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .register-card,
+  .register-intro {
+    animation: none;
+  }
+}

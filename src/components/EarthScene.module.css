@@ -1,0 +1,12 @@
+.scene { position:relative; isolation:isolate; overflow:visible; }
+.scene canvas { position:relative; z-index:1; display:block; width:100%; height:100%; }
+.fallback { position:absolute; top:50%; left:50%; width:min(74%,330px); aspect-ratio:1; transform:translate(-50%,-50%); border:1px solid rgba(141,210,255,.55); border-radius:50%; background-color:#0b4775; background-image:linear-gradient(90deg,rgba(0,12,31,.28),rgba(4,31,56,.04) 55%,rgba(0,6,24,.35)),url('/images/earth-blue-marble-2048.jpg'),radial-gradient(circle at 35% 30%,#68b9de,#1472a5 56%,#031328 100%); background-size:cover; background-position:center; box-shadow:0 0 40px rgba(46,155,255,.32),inset -18px -10px 38px rgba(0,0,0,.42); }
+.fallback::after { content:""; position:absolute; inset:-7%; border:1px solid rgba(91,171,255,.25); border-radius:50%; box-shadow:0 0 45px rgba(47,157,255,.22); }
+.hidden { display:none; }
+.chip { position:absolute; z-index:2; display:inline-flex; align-items:center; gap:7px; max-width:90%; padding:10px 14px; border:1px solid rgba(125,183,239,.22); border-radius:13px; color:#e7f3ff; background:rgba(6,19,39,.86); box-shadow:0 8px 28px rgba(0,0,0,.25); backdrop-filter:blur(12px); font-size:10px; font-weight:600; white-space:nowrap; animation:float 4.5s ease-in-out infinite; }
+.chipA { top:17%; left:2%; }
+.chipB { top:32%; right:2%; animation-delay:-1.4s; }
+.chipC { bottom:9%; left:9%; animation-delay:-2.7s; }
+@keyframes float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-7px); } }
+@media (max-width:760px) { .fallback { width:min(68%,230px); } .chip { padding:8px 10px; font-size:9px; } .chipA { top:12%; left:0; } .chipB { top:28%; right:0; } .chipC { bottom:4%; left:6%; } }
+@media (prefers-reduced-motion:reduce) { .chip { animation:none; } }

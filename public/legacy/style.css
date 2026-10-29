@@ -1,0 +1,1009 @@
+
+/* ==========================================
+   AIRGUARD — FULL DARK SPACE LOGIN PAGE
+   Responsive layout + Earth cropping fix
+========================================== */
+
+:root {
+  --green: #36e0a0;
+  --green-dark: #17bd86;
+  --blue: #52a7ff;
+  --text: #f1f7ff;
+  --muted: #a3b5cc;
+  --border: rgba(150, 194, 240, 0.18);
+  --glass: rgba(7, 19, 38, 0.82);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  min-height: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  font-family: "Poppins", sans-serif;
+  color: var(--text);
+  background: #020713;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 3px;
+}
+
+/* ==========================================
+   FULL-PAGE SPACE BACKGROUND
+========================================== */
+
+.auth-page {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: clip;
+
+  background:
+    radial-gradient(
+      ellipse at 18% 40%,
+      rgba(13, 76, 135, 0.25),
+      transparent 42%
+    ),
+    radial-gradient(
+      ellipse at 80% 65%,
+      rgba(10, 63, 115, 0.2),
+      transparent 40%
+    ),
+    linear-gradient(
+      135deg,
+      #020611 0%,
+      #061326 48%,
+      #020713 100%
+    );
+}
+
+.ambient {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.ambient::before,
+.ambient::after {
+  content: "";
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  filter: blur(110px);
+  opacity: 0.15;
+}
+
+.ambient::before {
+  top: 5%;
+  left: -220px;
+  background: #0879e8;
+}
+
+.ambient::after {
+  right: -220px;
+  bottom: 0;
+  background: #08b98a;
+}
+
+/* Stars across the page */
+
+.auth-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+
+  background-image:
+    radial-gradient(circle, #fff 0.7px, transparent 1.2px),
+    radial-gradient(circle, #8ecbff 0.8px, transparent 1.4px),
+    radial-gradient(circle, #fff 0.6px, transparent 1.2px);
+
+  background-size: 89px 97px, 137px 131px, 193px 179px;
+  background-position: 11px 23px, 48px 62px, 92px 38px;
+  opacity: 0.3;
+}
+
+/* ==========================================
+   HEADER
+========================================== */
+
+.auth-header {
+  width: min(1400px, calc(100% - 48px));
+  min-height: 84px;
+  margin: 0 auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+
+  position: relative;
+  z-index: 5;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: #fff;
+}
+
+.brand-mark {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(103, 222, 178, 0.2);
+  border-radius: 15px;
+  background: linear-gradient(
+    135deg,
+    rgba(20, 173, 119, 0.2),
+    rgba(54, 139, 255, 0.18)
+  );
+  font-size: 24px;
+}
+
+.brand > span:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.brand b {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  line-height: 1.2;
+}
+
+.brand b span {
+  color: var(--green);
+}
+
+.brand small {
+  color: #91a9c5;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1.15px;
+}
+
+.text-link {
+  padding: 11px 17px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(12, 29, 52, 0.65);
+  color: #d9eaff;
+  font-size: 12px;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.text-link:hover {
+  border-color: rgba(82, 167, 255, 0.55);
+  background: rgba(23, 56, 92, 0.75);
+  transform: translateY(-2px);
+}
+
+/* ==========================================
+   MAIN TWO-COLUMN LAYOUT
+========================================== */
+
+.auth-layout {
+  width: min(1400px, calc(100% - 48px));
+  margin: 20px auto 40px;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 460px);
+  align-items: center;
+  gap: clamp(24px, 4vw, 64px);
+
+  position: relative;
+  z-index: 1;
+}
+
+.hero-panel,
+.auth-card {
+  min-width: 0;
+}
+
+/* ==========================================
+   HERO SECTION
+========================================== */
+
+.hero-panel {
+  position: relative;
+  padding: 18px 0 28px;
+  animation: hero-enter 0.8s ease both;
+}
+
+.eyebrow {
+  display: inline-block;
+  color: var(--green);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.8px;
+  line-height: 1.8;
+}
+
+.hero-panel > .eyebrow {
+  margin-top: 22px;
+}
+
+.hero-panel h1 {
+  margin-top: 12px;
+  color: #fff;
+  font-size: clamp(34px, 3.7vw, 52px);
+  font-weight: 700;
+  letter-spacing: -1.8px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.hero-panel h1 span {
+  color: transparent;
+  background: linear-gradient(
+    90deg,
+    #39e5a5,
+    #58aaff,
+    #a3d4ff
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.9;
+}
+
+.hero-panel > .muted {
+  max-width: 490px;
+  margin-top: 16px;
+}
+
+/* ==========================================
+   EARTH CONTAINER — NO CLIPPING
+========================================== */
+
+.earth-wrap {
+  width: 100%;
+  max-width: 520px;
+  height: 490px;
+  margin: 0 auto;
+  position: relative;
+  isolation: isolate;
+  overflow: visible;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* Three.js canvas */
+
+#globe {
+  position: absolute;
+  width: min(490px, 100%);
+  height: min(490px, 100%);
+  max-width: 100%;
+
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+
+  z-index: 1;
+  overflow: hidden;
+  border-radius: 50%;
+  background: transparent;
+  pointer-events: none;
+}
+
+#globe canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Orbital rings */
+
+.orbit {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  border: 1px solid rgba(91, 171, 255, 0.23);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.orbit-a {
+  width: min(390px, 90%);
+  height: 155px;
+  transform: translate(-50%, -50%) rotate(-25deg);
+}
+
+.orbit-b {
+  width: min(350px, 85%);
+  height: 120px;
+  transform: translate(-50%, -50%) rotate(38deg);
+  border-color: rgba(54, 224, 160, 0.2);
+}
+
+/* Floating chips */
+
+.float-chip {
+  position: absolute;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  max-width: 90%;
+  padding: 10px 14px;
+  border: 1px solid rgba(125, 183, 239, 0.22);
+  border-radius: 13px;
+
+  color: #e7f3ff;
+  background: rgba(6, 19, 39, 0.86);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  animation: float-gently 4.5s ease-in-out infinite;
+}
+
+.chip-a {
+  top: 17%;
+  left: 2%;
+}
+
+.chip-b {
+  top: 32%;
+  right: 2%;
+  animation-delay: -1.4s;
+}
+
+.chip-c {
+  bottom: 9%;
+  left: 9%;
+  animation-delay: -2.7s;
+}
+
+/* Hero feature list */
+
+.hero-points {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 19px;
+  margin-top: 23px;
+}
+
+.hero-points span {
+  color: #b8cce0;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+/* ==========================================
+   LOGIN CARD
+========================================== */
+
+.auth-card {
+  width: 100%;
+  max-width: 460px;
+  justify-self: stretch;
+  padding: clamp(24px, 2.5vw, 40px);
+
+  position: relative;
+  z-index: 3;
+
+  border: 1px solid rgba(149, 190, 234, 0.2);
+  border-radius: 23px;
+  background: var(--glass);
+
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+
+  animation: card-enter 0.8s 0.1s ease both;
+}
+
+.mobile-brand {
+  display: none;
+  color: var(--green);
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 24px;
+}
+
+.auth-card > .eyebrow {
+  margin-bottom: 9px;
+}
+
+.auth-card h2 {
+  color: #fff;
+  font-size: clamp(23px, 2.2vw, 29px);
+  font-weight: 700;
+  letter-spacing: -0.7px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.auth-card > .muted {
+  margin-top: 9px;
+  font-size: 12px;
+}
+
+/* ==========================================
+   FORM FIELDS
+========================================== */
+
+.form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 27px;
+}
+
+.form-stack > label {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  color: #d3e1f0;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.form-stack input:not([type="checkbox"]) {
+  width: 100%;
+  min-width: 0;
+  height: 49px;
+  padding: 0 15px;
+
+  border: 1px solid rgba(150, 186, 222, 0.2);
+  border-radius: 11px;
+  outline: none;
+
+  background: rgba(2, 12, 26, 0.65);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 400;
+
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-stack input::placeholder {
+  color: #7188a3;
+}
+
+.form-stack input:not([type="checkbox"]):focus {
+  border-color: #52a7ff;
+  box-shadow: 0 0 0 4px rgba(57, 136, 245, 0.12);
+}
+
+/* Password */
+
+.password-row {
+  display: flex;
+  align-items: center;
+  position: relative;
+  min-width: 0;
+}
+
+.password-row input {
+  padding-right: 48px !important;
+}
+
+.icon-button {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: #a5bad0;
+  font-size: 17px;
+}
+
+.icon-button:hover {
+  background: rgba(82, 167, 255, 0.12);
+  color: #fff;
+}
+
+/* Remember me and forgot password */
+
+.form-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: -2px;
+}
+
+.check-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #b5c6d9;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.check-label input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--green);
+  cursor: pointer;
+}
+
+.form-between > a {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+/* ==========================================
+   BUTTONS
+========================================== */
+
+.btn {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  padding: 12px 18px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+
+  font-size: 12px;
+  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn-full {
+  width: 100%;
+}
+
+.btn-primary {
+  color: #fff;
+  background: linear-gradient(105deg, #10ad78, #287fe8);
+  box-shadow: 0 8px 24px rgba(31, 130, 207, 0.18);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 12px 30px rgba(31, 130, 207, 0.3);
+}
+
+.btn-primary span {
+  font-size: 17px;
+  margin-left: auto;
+}
+
+.btn-social {
+  color: #e0edfc;
+  border-color: rgba(150, 186, 222, 0.2);
+  background: rgba(14, 32, 55, 0.8);
+}
+
+.btn-social:hover {
+  background: rgba(30, 56, 87, 0.9);
+  border-color: rgba(130, 189, 250, 0.4);
+}
+
+/* ==========================================
+   STATUS MESSAGES
+========================================== */
+
+.form-message {
+  min-height: 0;
+  font-size: 11px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.form-message:empty {
+  display: none;
+}
+
+.form-message.error {
+  padding: 10px 12px;
+  border-radius: 9px;
+  color: #ffb7b7;
+  background: rgba(140, 35, 35, 0.2);
+  border: 1px solid rgba(255, 110, 110, 0.15);
+}
+
+.form-message.success {
+  padding: 10px 12px;
+  border-radius: 9px;
+  color: #80f3bd;
+  background: rgba(20, 150, 95, 0.13);
+}
+
+/* ==========================================
+   DIVIDER AND FOOTER TEXT
+========================================== */
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin: 24px 0 19px;
+  color: #8399b2;
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.auth-divider span {
+  flex: 1;
+  height: 1px;
+  background: rgba(150, 186, 222, 0.17);
+}
+
+.auth-foot {
+  margin-top: 24px;
+  color: #9bb0c7;
+  text-align: center;
+  font-size: 11px;
+}
+
+.auth-foot a {
+  color: var(--green);
+  font-weight: 600;
+}
+
+.auth-foot a:hover,
+.form-between > a:hover {
+  text-decoration: underline;
+}
+
+.tiny-note {
+  margin-top: 19px;
+  color: #7f94ac;
+  text-align: center;
+  font-size: 9px;
+  line-height: 1.8;
+}
+
+/* ==========================================
+   FOOTER
+========================================== */
+
+.auth-footer {
+  width: min(1400px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 20px 0 26px;
+  color: #7e94ae;
+  text-align: center;
+  font-size: 10px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ==========================================
+   ANIMATIONS
+========================================== */
+
+@keyframes float-gently {
+  0%, 100% {
+    translate: 0 0;
+  }
+
+  50% {
+    translate: 0 -8px;
+  }
+}
+
+@keyframes hero-enter {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==========================================
+   TABLET
+========================================== */
+
+@media (max-width: 1000px) {
+  .auth-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+    gap: 24px;
+  }
+
+  .earth-wrap {
+    height: 400px;
+  }
+
+  #globe {
+    width: min(400px, 100%);
+    height: min(400px, 100%);
+  }
+
+  .hero-panel h1 {
+    font-size: clamp(30px, 4vw, 42px);
+  }
+}
+
+/* ==========================================
+   MOBILE
+========================================== */
+
+@media (max-width: 760px) {
+  .auth-header {
+    width: calc(100% - 32px);
+    min-height: 76px;
+  }
+
+  .brand-mark {
+    width: 40px;
+    height: 40px;
+    border-radius: 13px;
+  }
+
+  .brand b {
+    font-size: 19px;
+  }
+
+  .brand small {
+    font-size: 8px;
+    letter-spacing: 0.8px;
+  }
+
+  .text-link {
+    padding: 9px 11px;
+    font-size: 10px;
+  }
+
+  .auth-layout {
+    width: calc(100% - 32px);
+    margin: 12px auto 30px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+
+  .hero-panel {
+    padding: 10px 0 0;
+    text-align: center;
+  }
+
+  .earth-wrap {
+    width: 100%;
+    max-width: 440px;
+    height: min(85vw, 380px);
+    min-height: 280px;
+  }
+
+  #globe {
+    width: min(85vw, 380px);
+    height: min(85vw, 380px);
+  }
+
+  .orbit-a {
+    width: min(78vw, 320px);
+    height: 110px;
+  }
+
+  .orbit-b {
+    width: min(72vw, 290px);
+    height: 100px;
+  }
+
+  .float-chip {
+    padding: 8px 10px;
+    font-size: 9px;
+  }
+
+  .chip-a {
+    top: 12%;
+    left: 2%;
+  }
+
+  .chip-b {
+    top: 30%;
+    right: 2%;
+  }
+
+  .chip-c {
+    bottom: 5%;
+    left: 7%;
+  }
+
+  .hero-panel > .eyebrow {
+    margin-top: 16px;
+    font-size: 9px;
+    letter-spacing: 1.2px;
+  }
+
+  .hero-panel h1 {
+    font-size: clamp(30px, 8vw, 43px);
+    letter-spacing: -1.2px;
+  }
+
+  .hero-panel > .muted {
+    margin: 14px auto 0;
+    max-width: 440px;
+    font-size: 12px;
+  }
+
+  .hero-points {
+    justify-content: center;
+    gap: 10px 15px;
+  }
+
+  .hero-points span {
+    font-size: 9px;
+  }
+
+  .auth-card {
+    width: 100%;
+    max-width: 480px;
+    justify-self: center;
+    padding: 28px 22px;
+    border-radius: 21px;
+  }
+
+  .auth-card h2 {
+    font-size: 25px;
+  }
+
+  .auth-footer {
+    width: calc(100% - 32px);
+    padding-top: 8px;
+    padding-bottom: 22px;
+  }
+}
+
+/* ==========================================
+   SMALL PHONES
+========================================== */
+
+@media (max-width: 400px) {
+  .auth-header,
+  .auth-layout,
+  .auth-footer {
+    width: calc(100% - 24px);
+  }
+
+  .brand {
+    gap: 7px;
+  }
+
+  .brand-mark {
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+  }
+
+  .brand b {
+    font-size: 16px;
+  }
+
+  .brand small {
+    font-size: 7px;
+    letter-spacing: 0.4px;
+  }
+
+  .text-link {
+    padding: 8px 9px;
+    font-size: 9px;
+  }
+
+  .earth-wrap {
+    height: 280px;
+    min-height: 280px;
+  }
+
+  #globe {
+    width: 280px;
+    height: 280px;
+  }
+
+  .float-chip {
+    padding: 7px 8px;
+    font-size: 8px;
+  }
+
+  .auth-card {
+    padding: 24px 16px;
+  }
+
+  .auth-card h2 {
+    font-size: 22px;
+  }
+
+  .form-between {
+    gap: 8px;
+  }
+}
+
+/* ==========================================
+   REDUCED MOTION
+========================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,209 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>AirGuard | Smart Air • Smart Health</title>
+
+  <meta
+    name="description"
+    content="Understand air quality, explore pollution trends, and make healthier everyday choices with AirGuard."
+  >
+
+  <link rel="stylesheet" href="style.css">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+  <!-- Load libraries and application scripts in this order -->
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"
+    defer
+  ></script>
+
+  <script src="earth.js" defer></script>
+  <script src="script.js" defer></script>
+</head>
+
+<body class="auth-page">
+
+  <div class="ambient" aria-hidden="true"></div>
+
+  <!-- Header -->
+  <header class="auth-header">
+    <a class="brand" href="index.html" aria-label="AirGuard home">
+      <span class="brand-mark" aria-hidden="true">🌿</span>
+
+      <span>
+        <b>AIR<span>GUARD</span></b>
+        <small>SMART AIR • SMART HEALTH</small>
+      </span>
+    </a>
+
+    <a class="text-link" href="register.html">
+      Create account ↗
+    </a>
+  </header>
+
+  <main class="auth-layout">
+
+    <!-- Hero section -->
+    <section class="hero-panel">
+
+      <div class="earth-wrap">
+
+        <!-- Three.js renders the Earth inside this element -->
+        <div
+          id="globe"
+          role="img"
+          aria-label="Realistic rotating 3D Earth"
+        ></div>
+
+        <span class="orbit orbit-a" aria-hidden="true"></span>
+        <span class="orbit orbit-b" aria-hidden="true"></span>
+
+        <span class="float-chip chip-a">◉ Cleaner air</span>
+        <span class="float-chip chip-b">✦ Smart prediction</span>
+        <span class="float-chip chip-c">♡ Health first</span>
+      </div>
+
+      <p class="eyebrow">
+        A CLEARER VIEW OF THE AIR AROUND YOU
+      </p>
+
+      <h1>
+        Breathe today.<br>
+        <span>Live better tomorrow.</span>
+      </h1>
+
+      <p class="muted">
+        Understand air quality, discover pollution trends,
+        and make informed everyday choices.
+      </p>
+
+      <div class="hero-points">
+        <span>✓ AQI insights</span>
+        <span>✓ Personalised guidance</span>
+        <span>✓ Forecast overview</span>
+      </div>
+
+    </section>
+
+    <!-- Login card -->
+    <section class="auth-card">
+
+      <div class="mobile-brand">🌿 AIRGUARD</div>
+
+      <span class="eyebrow">WELCOME BACK</span>
+
+      <h2>Sign in to AirGuard</h2>
+
+      <p class="muted">
+        Your air-quality overview is one step away.
+      </p>
+
+      <form id="loginForm" class="form-stack">
+
+        <label for="email">
+          Email address
+
+          <input
+            id="email"
+            name="email"
+            type="email"
+            autocomplete="email"
+            placeholder="you@example.com"
+            required
+          >
+        </label>
+
+        <label for="password">
+          Password
+
+          <span class="password-row">
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              placeholder="Enter your password"
+              required
+            >
+
+            <button
+              class="icon-button"
+              type="button"
+              id="togglePassword"
+              aria-label="Show password"
+              aria-pressed="false"
+            >◉</button>
+          </span>
+        </label>
+
+        <div class="form-between">
+
+          <label class="check-label" for="rememberMe">
+            <input
+              type="checkbox"
+              id="rememberMe"
+              name="rememberMe"
+            >
+            Remember me
+          </label>
+
+          <a href="#" id="forgotLink">Forgot password?</a>
+        </div>
+
+        <button class="btn btn-primary btn-full" type="submit">
+          Sign in <span aria-hidden="true">→</span>
+        </button>
+
+        <p
+          id="loginMessage"
+          class="form-message"
+          role="status"
+          aria-live="polite"
+        ></p>
+
+      </form>
+
+      <div class="auth-divider">
+        <span></span>
+        OR
+        <span></span>
+      </div>
+
+      <button
+        class="btn btn-social btn-full"
+        type="button"
+        id="demoLogin"
+      >
+        Explore demo dashboard
+      </button>
+
+      <p class="auth-foot">
+        New to AirGuard?
+        <a href="register.html">Create an account</a>
+      </p>
+
+      <p class="tiny-note">
+        Demo mode: account data stays in this browser.
+        Do not use real passwords until a secure backend is connected.
+      </p>
+
+    </section>
+  </main>
+
+  <footer class="auth-footer">
+    © <span data-year></span> AirGuard · Every breath matters
+  </footer>
+
+</body>
+</html>
