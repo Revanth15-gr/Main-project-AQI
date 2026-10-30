@@ -2,9 +2,11 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import styles from "./LoginForm.module.css";
 
 export function LoginForm() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<"error" | "success">("error");
@@ -35,10 +37,23 @@ export function LoginForm() {
     }
   }
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setMessageType("error");
-    setMessage("Secure sign-in is not connected yet. Use the demo dashboard or configure Better Auth and Supabase first.");
+    setMessage("");
+    const form = new FormData(event.currentTarget);
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.get("email"), password: form.get("password") }),
+      });
+      const result = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(result.error || "Sign-in failed.");
+      router.push("/dashboard");
+    } catch (error) {
+      setMessageType("error");
+      setMessage(error instanceof Error ? error.message : "Sign-in failed.");
+    }
   }
 
   return (
@@ -62,7 +77,7 @@ export function LoginForm() {
         </label>
         <div className={styles.between}>
           <label className={styles.remember}><input type="checkbox" name="rememberMe" ref={rememberRef} onChange={rememberEmail} /> Remember me</label>
-          <button className={styles.forgot} type="button" onClick={() => setMessage("Password recovery requires a configured authentication backend.")}>Forgot password?</button>
+          <button className={styles.forgot} type="button" onClick={() => setMessage("Password recovery is not available yet.")}>Forgot password?</button>
         </div>
         <button className={`${styles.button} ${styles.primary}`} type="submit">Sign in <span aria-hidden="true">→</span></button>
         <p className={`${styles.message} ${message ? styles[messageType] : ""}`} role="status" aria-live="polite">{message}</p>
@@ -71,7 +86,7 @@ export function LoginForm() {
       <div className={styles.divider}><span />OR<span /></div>
       <Link className={`${styles.button} ${styles.secondary}`} href="/dashboard">Explore demo dashboard</Link>
       <p className={styles.foot}>New to AirGuard? <Link href="/register">Create an account</Link></p>
-      <p className={styles.note}>Demo data only. Do not enter a real password until secure sign-in is configured.</p>
+      <p className={styles.note}>Sign-in uses a secure session token. Your account credentials stay on the server.</p>
     </section>
   );
 }

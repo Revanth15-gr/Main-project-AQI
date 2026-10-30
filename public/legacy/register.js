@@ -1,1 +1,40 @@
-document.addEventListener('DOMContentLoaded',()=>{const form=document.getElementById('registerForm');if(!form)return;const none=[...document.querySelectorAll('input[name="disease"]')].find(x=>x.value==='None');const diseases=[...document.querySelectorAll('input[name="disease"]')];diseases.forEach(box=>box.addEventListener('change',()=>{if(box===none&&none.checked)diseases.filter(x=>x!==none).forEach(x=>x.checked=false);else if(box.checked&&none)none.checked=false}));form.addEventListener('submit',e=>{e.preventDefault();const msg=document.getElementById('registerMessage'),password=document.getElementById('password').value,confirm=document.getElementById('confirmPassword').value;if(password.length<8){msg.textContent='Use a password with at least 8 characters.';return}if(password!==confirm){msg.textContent='Passwords do not match.';return}const email=document.getElementById('email').value.trim();const profile={fullName:document.getElementById('fullName').value.trim(),age:document.getElementById('age').value,gender:document.getElementById('gender').value,phone:document.getElementById('phone').value.trim(),location:document.getElementById('location').value.trim(),email,diseases:diseases.filter(x=>x.checked&&x.value!=='None').map(x=>x.value),healthInformation:document.getElementById('healthInfo').value.trim(),registeredAt:new Date().toISOString()};if(!profile.fullName||!profile.location||!email){msg.textContent='Please complete all required fields.';return}localStorage.setItem('airguardUser',JSON.stringify(profile));msg.textContent='Demo profile saved in this browser. Redirecting to sign in…';msg.style.color='#087b59';setTimeout(()=>location.href='index.html',900)});});
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("registerForm");
+  if (!form) return;
+  const message = document.getElementById("registerMessage");
+  const none = [...document.querySelectorAll('input[name="disease"]')].find((input) => input.value === "None");
+  const diseases = [...document.querySelectorAll('input[name="disease"]')];
+
+  diseases.forEach((box) => box.addEventListener("change", () => {
+    if (box === none && none.checked) diseases.filter((item) => item !== none).forEach((item) => { item.checked = false; });
+    else if (box.checked && none) none.checked = false;
+  }));
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const password = document.getElementById("password").value;
+    const confirm = document.getElementById("confirmPassword").value;
+    if (password.length < 8) { message.textContent = "Use a password with at least 8 characters."; return; }
+    if (password !== confirm) { message.textContent = "Passwords do not match."; return; }
+
+    const email = document.getElementById("email").value.trim();
+    const name = document.getElementById("fullName").value.trim();
+    if (!name || !email) { message.textContent = "Please complete all required fields."; return; }
+
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ name, email, password }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Registration failed.");
+      message.textContent = "Account created. Redirecting…";
+      message.style.color = "#087b59";
+      window.location.assign("/dashboard");
+    } catch (error) {
+      message.textContent = error.message || "Registration failed. Please try again.";
+    }
+  });
+});

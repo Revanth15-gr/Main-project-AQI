@@ -1,63 +1,54 @@
-# AirGuard Next.js rebuild
+# AirGuard
 
-This is a separate Next.js App Router application. The original HTML/CSS/JavaScript prototype remains unchanged in the workspace root. A copy of its registration and dashboard files lives in `public/legacy` so the original demo functionality remains available at `/register` and `/dashboard`.
+AirGuard uses the Open-Meteo Air Quality API for live, model-estimated pollutant and provider AQI data. It does not present archived bulletins or predictions as current sensor readings.
 
-## What works now
+## Run locally
 
-- The new `/` login screen keeps the AirGuard mark, original copy, dark-space background, green/blue accents, password reveal, and demo navigation.
-- The Earth is a Three.js client component. Its bundled NASA Blue Marble map is paired with cloud and atmosphere effects; the Earth stays inside a responsive square viewport. If WebGL or the image is unavailable, a CSS globe remains visible.
-- Reduced motion is respected. The renderer, textures, geometries, observer, event listeners, and animation frame are cleaned up on unmount.
-- `/register` keeps the prototype registration flow. `/dashboard` opens the public historical AQI dashboard at `/legacy/dashboard.html`.
-- The demo dashboard uses the supplied light mint/blue theme from `public/legacy/dashboard-theme.css`; the login and registration pages keep their existing styling.
-- The dashboard reads bundled, real historical daily city-average AQI bulletins for Visakhapatnam, Hyderabad, Delhi, and Bengaluru. The series were compiled from CPCB daily bulletins by [UrbanEmissions.Info](https://urbanemissions.info/india-air-quality/india-ncap-aqi-indian-cities-2015-2023/) and end on 31 December 2023. The UI labels them as historical and does not call them current readings. Rajam is not included in this archive, so it shows a no-data state.
-- A Better Auth App Router endpoint and server-only PostgreSQL connection foundation are included. Sign-in and protected dashboard access are not enabled until a real Supabase database is configured and migrated. The demo dashboard is intentionally a public prototype and is not an authenticated route.
-
-Earth surface image: NASA Visible Earth, [Blue Marble: Land Surface, Shallow Water, and Shaded Topography](https://visibleearth.nasa.gov/view.php?id=57752). NASA describes the imagery as freely available to the public. The downloaded 2048px Blue Marble JPEG is in `public/images/earth-blue-marble-2048.jpg`.
-
-## Run locally (PowerShell)
+Requires Node.js 20.9 or newer.
 
 ```powershell
-cd "D:\Main Project\airguard-next"
 npm install
 npm run dev
 ```
 
-Open <http://localhost:3000>. Node.js 20.9+ is required; the current Next.js installation guide lists that minimum.
+Open <http://localhost:3000>. The Express server runs in front of Next.js and serves the existing site and API on one port. For production, run `npm run build` and then `npm start` on a persistent Node.js host.
 
-## Configure Supabase PostgreSQL and Better Auth
+## Configure sign-in and data storage
 
-1. Create a Supabase project and obtain its PostgreSQL connection string. Prefer the direct/server connection or session pooler supported for your deployment; do not put the database URI in a `NEXT_PUBLIC_` variable.
-2. Copy the example and generate a secret:
+Copy `.env.example` to `.env.local`, then set `MONGODB_URI`, `MONGODB_DB`, and a `JWT_SECRET` of at least 32 characters. Keep the Atlas URI and JWT secret private. The application uses its existing signed JWT cookie authentication. Protected dashboard and air-quality routes require a valid signed-in session.
 
-   ```powershell
-   Copy-Item .env.example .env.local
-   node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
-   ```
+## Live India-wide air quality
 
-3. Set `DATABASE_URL`, `BETTER_AUTH_SECRET` (at least 32 characters), and `BETTER_AUTH_URL` in `.env.local`. Keep `.env.local` private; `.gitignore` excludes it.
-4. Apply Better Auth's PostgreSQL schema with the official CLI after setting the environment:
+- The dashboard supports Indian city search through Open-Meteo geocoding with `countryCode=IN`, common city shortcuts, and browser location only after the user opts in.
+- Node/Express provides `GET /api/air-quality/current`, `/history`, `/status`, and `/geocode`. Air-quality APIs require sign-in.
+- Pollutants include PM2.5, PM10, NO2, SO2, CO and O3 where available. European AQI and US AQI are shown with their own standards. CPCB India AQI is not calculated from instantaneous values because required averaging windows are unavailable.
+- The server caches and deduplicates by coordinates, retries failed provider calls with backoff, preserves the last successful result, stores readings in MongoDB, and refreshes tracked locations every 300 seconds. Browser dashboard polling also runs every five minutes. A persistent Node process is required for the scheduler; serverless hosting requires a platform scheduler.
+- Provider model timestamp and application fetch timestamp are displayed separately. Five-minute retrieval does not imply a new provider model observation every five minutes. The feed is modelled output, not an IoT sensor feed.
+- Open-Meteo is used without an API key for eligible non-commercial use. The dashboard links to Open-Meteo and CAMS attribution. Review the [Open-Meteo terms](https://open-meteo.com/en/terms) before deployment.
+- Previous sample dashboard code and CPCB bulletin CSVs have been moved out of the publicly served folder into `archive/legacy-demo`; they are not loaded by the website or used as live readings.
 
-   ```powershell
-   npx auth@latest migrate
-   ```
+## Optional Random Forest service
 
-5. The server endpoint is `/api/auth/[...all]`. Before enabling the login form, implement and verify its Better Auth client sign-in flow, then protect the production dashboard with server-side session validation. Do not treat `/legacy/dashboard.html` as private; it shows historical archive data and its demo profile still uses local browser storage.
+`ml-service` contains a FastAPI inference service. Start it with:
 
-No credentials are included, no authentication is claimed as working, and no passwords are saved by the new login form.
+```powershell
+cd ml-service
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+uvicorn main:app --host 0.0.0.0 --port 8000
+```
 
-## AQI data phases
+Set `ML_SERVICE_URL=http://localhost:8000` in the root `.env.local` and restart Node. **This repository contains no validated pretrained Random Forest artifact or Kaggle training data.** The service reports its model unavailable and returns HTTP 503 until a compatible trained scikit-learn Pipeline and feature metadata are supplied in `ml-service/saved_models`. It will not make up a prediction. Document the actual dataset, target, feature preprocessing and validation metrics with any future artifact. Provider measurements and model predictions are returned separately.
 
-- Current implementation: historical CPCB city-average AQI, category, prominent pollutant, station count, and bulletin date. Individual pollutant concentrations are not present in these city-bulletin CSVs, so the dashboard does not invent PM2.5/PM10 readings.
-- Later live phase: connect an official live provider through a server-side route, retain source/station/timestamp/freshness, and distinguish current observations from archive history.
-- Later notification phase: add opt-in AQI thresholds and WhatsApp delivery through an approved provider after consent and provider credentials are configured.
-- Later LLM/RAG phase: retrieve from reviewed air-quality/public-health references, show sources, keep guidance informational, and require user opt-in before any message is sent.
+## Advisory status
 
-## Validation
+The dashboard currently offers clearly labeled, general rule-based guidance based on the selected provider index and the user's locally stored profile. No LLM advisory implementation, provider configuration, or credentials are present in this repository, so it does not claim to generate LLM advice or transmit health-profile information to a model provider.
+
+## Checks
 
 ```powershell
 npm run typecheck
 npm run lint
 npm run build
 ```
-
-The original prototype uses external chart/map libraries and is retained as-is; those legacy CDN features need internet access.

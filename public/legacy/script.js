@@ -106,15 +106,20 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
-      /*
-       * This page does not have a secure authentication backend.
-       * Do not accept arbitrary credentials as a real login.
-       * Connect your existing authentication implementation here.
-       */
-      showMessage(
-        "Login authentication is not connected yet. Use the demo dashboard or connect your backend.",
-        "error"
-      );
+      fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ email, password })
+      })
+        .then(async function (response) {
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || "Sign-in failed.");
+          window.location.assign("/dashboard");
+        })
+        .catch(function (error) {
+          showMessage(error.message || "Unable to sign in. Please try again.", "error");
+        });
     });
   }
 
