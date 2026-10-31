@@ -1,16 +1,19 @@
 import express, { type Request, type Response, type NextFunction } from "express";
 import next from "next";
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { getCurrent, getHistory, getStatus, refreshLocation, startAirQualityScheduler, type AirLocation } from "../src/lib/air-quality";
+import { getCpcbStatus, getCpcbStations, getCurrent, getHistory, getStatus, refreshLocation, startAirQualityScheduler, type AirLocation } from "../src/lib/air-quality";
 
 const dev = process.argv.includes("--dev");
 const port = Number(process.env.PORT || 3000);
-const nextApp = next({ dev, hostname: "0.0.0.0", port });
+const nextApp = next({ dev, hostname: "0.0.0.0", port, webpack: dev });
 const handle = nextApp.getRequestHandler();
 const app = express();
 app.disable("x-powered-by");
 
 function authenticated(req: Request, res: Response, nextMiddleware: NextFunction) {
+  const demoDataPaths = new Set(["/current", "/geocode", "/history", "/stations", "/status"]);
+  if (req.method === "GET" && req.query.demo === "1" && demoDataPaths.has(req.path)) return nextMiddleware();
+
   const token = req.cookies?.airguard_token || req.headers.cookie?.match(/(?:^|;\s*)airguard_token=([^;]+)/)?.[1];
   const secret = process.env.JWT_SECRET;
   try {
@@ -53,25 +56,46 @@ app.get("/api/air-quality/current", async (req, res) => {
 app.get("/api/air-quality/history", async (req, res) => {
   const location = selectedLocation(req);
   if (!location) return res.status(400).json({ error: "Valid latitude and longitude are required." });
+  if (req.query.demo === "1") return res.set("Cache-Control", "no-store").json([]);
   try { return res.json(await getHistory(location, Number(req.query.limit) || 24)); }
   catch { return res.status(503).json({ error: "Air-quality history is not available." }); }
 });
 
 app.get("/api/air-quality/status", (_req, res) => {
   startAirQualityScheduler();
-  return res.set("Cache-Control", "no-store").json({ refreshIntervalSeconds: 300, source: "Open-Meteo Air Quality API", locations: getStatus() });
+  return res.set("Cache-Control", "no-store").json({ refreshIntervalSeconds: 300, source: "Open-Meteo Air Quality API", cpcb: getCpcbStatus(), locations: getStatus() });
+});
+
+app.get("/api/air-quality/stations", (_req, res) => {
+  startAirQualityScheduler();
+  return res.set("Cache-Control", "no-store").json({ ...getCpcbStatus(), stations: getCpcbStations() });
 });
 
 app.get("/api/air-quality/geocode", async (req, res) => {
   const query = String(req.query.q || "").trim();
   if (query.length < 2 || query.length > 100) return res.status(400).json({ error: "Enter at least two characters to search." });
   try {
-    const url = new URL("https://geocoding-api.open-meteo.com/v1/search");
-    url.search = new URLSearchParams({ name: query, count: "10", language: "en", format: "json", countryCode: "IN" }).toString();
-    const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
-    if (!response.ok) throw new Error("Geocoding service unavailable");
-    const data = await response.json() as { results?: Array<{ name: string; admin1?: string; country?: string; country_code?: string; latitude: number; longitude: number }> };
-    return res.json((data.results || []).filter((item) => item.country_code === "IN").map((item) => ({ name: [item.name, item.admin1, "India"].filter(Boolean).join(", "), latitude: item.latitude, longitude: item.longitude })));
+    const terms = [...new Set([query, query.split(",")[0].trim()].filter(Boolean))];
+    const matches = new Map<number, { name: string; admin1?: string; admin2?: string; admin3?: string; country?: string; country_code?: string; latitude: number; longitude: number }>();
+    for (const term of terms) {
+      const url = new URL("https://geocoding-api.open-meteo.com/v1/search");
+      url.search = new URLSearchParams({ name: term, count: "10", language: "en", format: "json", countryCode: "IN" }).toString();
+      const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      if (!response.ok) throw new Error("Geocoding service unavailable");
+      const data = await response.json() as { results?: Array<{ id: number; name: string; admin1?: string; admin2?: string; admin3?: string; country?: string; country_code?: string; latitude: number; longitude: number }> };
+      for (const item of data.results || []) if (item.country_code === "IN") matches.set(item.id, item);
+      if (matches.size) break;
+    }
+    const normalize = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const hints = query.split(",").map((part) => normalize(part.trim())).filter((part) => part && part !== "india");
+    const results = [...matches.values()].map((item, index) => ({ item, index, full: normalize([item.name, item.admin1, item.admin2, item.admin3].filter(Boolean).join(" ")) }))
+      .sort((a, b) => {
+        const score = (entry: typeof a) => hints.reduce((sum, hint) => sum + (entry.full.includes(hint) ? 10 : 0), 0) +
+          (normalize(entry.item.name) === normalize(query.split(",")[0].trim()) ? 50 : 0) - entry.index / 100;
+        return score(b) - score(a);
+      })
+      .map(({ item }) => ({ name: [item.name, item.admin2, item.admin1, "India"].filter(Boolean).join(", "), latitude: item.latitude, longitude: item.longitude }));
+    return res.json(results);
   } catch { return res.status(502).json({ error: "Location search is temporarily unavailable." }); }
 });
 

@@ -84,7 +84,7 @@ export function LoginForm() {
       </form>
 
       <div className={styles.divider}><span />OR<span /></div>
-      <Link className={`${styles.button} ${styles.secondary}`} href="/dashboard">Explore demo dashboard</Link>
+      <Link className={`${styles.button} ${styles.secondary}`} href="/legacy/dashboard.html?demo=1">Explore live demo dashboard</Link>
       <p className={styles.foot}>New to AirGuard? <Link href="/register">Create an account</Link></p>
       <p className={styles.note}>Sign-in uses a secure session token. Your account credentials stay on the server.</p>
     </section>
