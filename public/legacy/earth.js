@@ -60,7 +60,7 @@
     const loader = new THREE.TextureLoader();
 
     const earthTexture = loader.load(
-      "https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg",
+      "/images/earth-blue-marble-2048.jpg",
       function () {
         console.log("AirGuard: Earth texture loaded.");
       },

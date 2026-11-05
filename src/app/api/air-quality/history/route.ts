@@ -1,9 +1,37 @@
-import { getHistory, type AirLocation } from "@/lib/air-quality";
+import { getAirQualityHistory } from "@/lib/air-quality/history";
+import type { LocationCandidate } from "@/lib/air-quality/types";
+
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+function isIndiaCoordinate(latitude: number, longitude: number) {
+  return latitude >= 6 && latitude <= 38.8 && longitude >= 68 && longitude <= 97.5;
+}
+
 export async function GET(request: Request) {
-  const url = new URL(request.url); const latitude = Number(url.searchParams.get("latitude")); const longitude = Number(url.searchParams.get("longitude"));
-  if (!Number.isFinite(latitude) || Math.abs(latitude) > 90 || !Number.isFinite(longitude) || Math.abs(longitude) > 180) return Response.json({ error: "Valid latitude and longitude are required." }, { status: 400 });
-  const location: AirLocation = { name: (url.searchParams.get("location") || "Selected location").slice(0, 100), latitude, longitude };
-  try { return Response.json(await getHistory(location, Number(url.searchParams.get("limit")) || 24)); }
-  catch { return Response.json({ error: "Air-quality history is not available." }, { status: 503 }); }
+  const params = new URL(request.url).searchParams;
+  const latitude = Number(params.get("latitude"));
+  const longitude = Number(params.get("longitude"));
+  const requestedDays = Number(params.get("days") || "7");
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || !isIndiaCoordinate(latitude, longitude)) {
+    return Response.json({ error: "Provide coordinates for a location in India." }, { status: 400 });
+  }
+  if (!Number.isInteger(requestedDays) || requestedDays < 1 || requestedDays > 90) {
+    return Response.json({ error: "History range must be between 1 and 90 days." }, { status: 400 });
+  }
+  const location: LocationCandidate = {
+    id: 0,
+    name: (params.get("name") || "Selected location").trim().slice(0, 100),
+    country: "India",
+    state: (params.get("state") || "").trim().slice(0, 100) || undefined,
+    district: (params.get("district") || "").trim().slice(0, 100) || undefined,
+    latitude,
+    longitude,
+  };
+  try {
+    const history = await getAirQualityHistory(location, requestedDays);
+    return Response.json(history, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } });
+  } catch {
+    return Response.json({ error: "Recent Open-Meteo air-quality history is temporarily unavailable." }, { status: 502 });
+  }
 }

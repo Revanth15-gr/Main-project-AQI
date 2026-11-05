@@ -347,3 +347,4 @@
     animation: none;
   }
 }
+.register-intro .earth-wrap #globe{border-radius:50%;background:#075983 url("/images/earth-blue-marble-2048.jpg") center/cover no-repeat;box-shadow:0 0 45px #1984c666,0 0 110px #69c7ff2a}

@@ -4,14 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "tsx backend/server.ts --dev",
-    "build": "next build --webpack",
+    "build": "next build",
     "start": "tsx backend/server.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "express": "^5.3.0",
-    "mongodb": "^7.7.0",
+    "mongodb": "^7.8.0",
     "next": "16.4.3",
     "pg": "8.23.1",
     "react": "19.3.1",

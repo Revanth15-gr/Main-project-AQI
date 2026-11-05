@@ -2,6 +2,7 @@ import express, { type Request, type Response, type NextFunction } from "express
 import next from "next";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { getCpcbStatus, getCpcbStations, getCurrent, getHistory, getStatus, refreshLocation, startAirQualityScheduler, type AirLocation } from "../src/lib/air-quality";
+import { getAirQualityHistory } from "../src/lib/air-quality/history";
 
 const dev = process.argv.includes("--dev");
 const port = Number(process.env.PORT || 3000);
@@ -57,6 +58,24 @@ app.get("/api/air-quality/history", async (req, res) => {
   const location = selectedLocation(req);
   if (!location) return res.status(400).json({ error: "Valid latitude and longitude are required." });
   if (req.query.demo === "1") return res.set("Cache-Control", "no-store").json([]);
+  if (req.query.days) {
+    const days = Number(req.query.days);
+    if (!Number.isInteger(days) || days < 1 || days > 90) return res.status(400).json({ error: "History range must be between 1 and 90 days." });
+    try {
+      const history = await getAirQualityHistory({
+        id: 0,
+        name: String(req.query.name || location.name).slice(0, 100),
+        country: "India",
+        state: String(req.query.state || "").slice(0, 100) || undefined,
+        district: String(req.query.district || "").slice(0, 100) || undefined,
+        latitude: location.latitude,
+        longitude: location.longitude,
+      }, days);
+      return res.set("Cache-Control", "no-store, no-cache, must-revalidate").json(history);
+    } catch {
+      return res.status(502).json({ error: "Recent Open-Meteo air-quality history is temporarily unavailable." });
+    }
+  }
   try { return res.json(await getHistory(location, Number(req.query.limit) || 24)); }
   catch { return res.status(503).json({ error: "Air-quality history is not available." }); }
 });

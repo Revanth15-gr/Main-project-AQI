@@ -1,15 +1,28 @@
 import "server-only";
-import { MongoClient } from "mongodb";
 
-let client: MongoClient | undefined;
+import { MongoClient, type Db } from "mongodb";
 
-export async function getUsers() {
+const globalMongo = globalThis as typeof globalThis & {
+  airguardMongoClient?: MongoClient;
+};
+
+export function getMongoClient() {
   const uri = process.env.MONGODB_URI;
-  if (!uri || uri.includes("<db_username>")) throw new Error("Set a complete MONGODB_URI in .env.local, including the Atlas database username.");
-  client ??= new MongoClient(uri);
-  const database = client.db(process.env.MONGODB_DB || "airguard");
-  await client.connect();
-  const users = database.collection<{ email: string; name: string; passwordHash: string; createdAt: Date }>("users");
-  await users.createIndex({ email: 1 }, { unique: true });
-  return users;
+  if (!uri) throw new Error("MONGODB_URI is missing. Configure MongoDB Atlas in .env.local.");
+  globalMongo.airguardMongoClient ??= new MongoClient(uri, {
+    appName: "AirGuard",
+    serverSelectionTimeoutMS: 10_000,
+  });
+  return globalMongo.airguardMongoClient;
+}
+
+export function getMongoDatabase(): Db {
+  const databaseName = process.env.MONGODB_DB?.trim() || "airguard";
+  return getMongoClient().db(databaseName);
+}
+
+export async function verifyMongoConnection() {
+  await getMongoClient().connect();
+  await getMongoDatabase().command({ ping: 1 });
+  return { database: process.env.MONGODB_DB?.trim() || "airguard", ok: true };
 }

@@ -1,11 +1,14 @@
-import { getCpcbStatus, getCpcbStations, startAirQualityScheduler } from "@/lib/air-quality";
+import { getCpcbSnapshot } from "@/lib/air-quality/service";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
 
 export async function GET() {
-  startAirQualityScheduler();
-  return Response.json({ ...getCpcbStatus(), stations: getCpcbStations() }, {
-    headers: { "Cache-Control": "no-store" },
-  });
+  try {
+    const { stations, detail } = await getCpcbSnapshot();
+    return Response.json({ stations, detail, fetchedAt: new Date().toISOString() }, {
+      headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=3600" },
+    });
+  } catch {
+    return Response.json({ error: "CPCB station data is temporarily unavailable." }, { status: 502 });
+  }
 }

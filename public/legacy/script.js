@@ -10,11 +10,34 @@ document.addEventListener("DOMContentLoaded", function () {
   const loginForm = document.getElementById("loginForm");
   const emailInput = document.getElementById("email");
   const passwordInput = document.getElementById("password");
+  let mobileInput = document.getElementById("mobileNumber");
   const togglePassword = document.getElementById("togglePassword");
   const rememberMe = document.getElementById("rememberMe");
   const demoLogin = document.getElementById("demoLogin");
   const forgotLink = document.getElementById("forgotLink");
   const loginMessage = document.getElementById("loginMessage");
+
+  if (loginForm && emailInput && !mobileInput) {
+    const mobileLabel = document.createElement("label");
+    mobileLabel.htmlFor = "mobileNumber";
+    mobileLabel.textContent = "Mobile number for WhatsApp alerts";
+    mobileInput = document.createElement("input");
+    mobileInput.id = "mobileNumber";
+    mobileInput.name = "mobileNumber";
+    mobileInput.type = "tel";
+    mobileInput.autocomplete = "tel";
+    mobileInput.inputMode = "tel";
+    mobileInput.placeholder = "+919876543210";
+    mobileInput.pattern = "(?:\\+[1-9][0-9]{7,14}|[6-9][0-9]{9}|91[6-9][0-9]{9})";
+    mobileInput.required = true;
+    mobileLabel.append(mobileInput);
+    emailInput.closest("label")?.before(mobileLabel);
+  }
+  mobileInput?.addEventListener("blur", () => {
+    const digits = mobileInput.value.trim().replace(/[\s()-]/g, "");
+    if (/^[6-9]\d{9}$/.test(digits)) mobileInput.value = `+91${digits}`;
+    else if (/^91[6-9]\d{9}$/.test(digits)) mobileInput.value = `+${digits}`;
+  });
 
   // Set the current year
   document.querySelectorAll("[data-year]").forEach(function (element) {
@@ -90,14 +113,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Login form
   if (loginForm) {
-    loginForm.addEventListener("submit", function (event) {
+    loginForm.addEventListener("submit", async function (event) {
       event.preventDefault();
+      const phoneDigits = mobileInput?.value.trim().replace(/[\s()-]/g, "") || "";
+      if (/^[6-9]\d{9}$/.test(phoneDigits)) mobileInput.value = `+91${phoneDigits}`;
+      else if (/^91[6-9]\d{9}$/.test(phoneDigits)) mobileInput.value = `+${phoneDigits}`;
 
       const email = emailInput.value.trim().toLowerCase();
       const password = passwordInput.value;
+      const phoneNumber = mobileInput?.value.trim() || "";
 
-      if (!email || !password) {
-        showMessage("Please enter your email and password.", "error");
+      if (!email || !password || !phoneNumber) {
+        showMessage("Please enter your mobile number, email and password.", "error");
         return;
       }
 
@@ -106,20 +133,26 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
-      fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify({ email, password })
-      })
-        .then(async function (response) {
-          const result = await response.json();
-          if (!response.ok) throw new Error(result.error || "Sign-in failed.");
-          window.location.assign("/dashboard");
-        })
-        .catch(function (error) {
-          showMessage(error.message || "Unable to sign in. Please try again.", "error");
+      const submit = loginForm.querySelector('button[type="submit"]');
+      if (submit) submit.disabled = true;
+      showMessage("Signing in…");
+      try {
+        const response = await fetch("/api/auth/login", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "content-type": "application/json", accept: "application/json" },
+          body: JSON.stringify({ email, password, phoneNumber }),
         });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error || `Sign-in failed (${response.status}).`);
+        try { localStorage.setItem("airguardMobile", result.user.phoneNumber); } catch { /* Storage is optional. */ }
+        showMessage("Signed in. Opening your dashboard…", "success");
+        window.location.href = "/dashboard";
+      } catch (error) {
+        showMessage(error instanceof Error ? error.message : "Sign-in is temporarily unavailable.", "error");
+      } finally {
+        if (submit) submit.disabled = false;
+      }
     });
   }
 
