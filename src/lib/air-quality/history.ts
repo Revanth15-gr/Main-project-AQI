@@ -1,5 +1,3 @@
-import "server-only";
-
 import { calculateIndianAqi, indianAqiCategory } from "@/lib/air-quality/aqi";
 import type { LocationCandidate } from "@/lib/air-quality/types";
 
