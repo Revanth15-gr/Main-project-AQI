@@ -11,7 +11,7 @@ import {
 import { isValidE164Phone } from "@/lib/twilio/phone";
 
 type Channel = "sms" | "whatsapp";
-type TwilioCredentials = { accountSid: string; authToken: string };
+type TwilioCredentials = { accountSid: string; authUsername: string; authPassword: string };
 type DeliveryInput = {
   userId: string;
   channel: Channel;
@@ -28,8 +28,16 @@ function readTwilioCredentials(): TwilioCredentials {
   if (process.env.TWILIO_ENABLED !== "true") throw new Error("Twilio delivery is disabled. Set TWILIO_ENABLED=true after completing setup.");
   const accountSid = process.env.TWILIO_ACCOUNT_SID?.trim();
   const authToken = process.env.TWILIO_AUTH_TOKEN?.trim();
-  if (!accountSid || !authToken) throw new Error("Twilio is not configured: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN.");
-  return { accountSid, authToken };
+  const apiKeySid = process.env.TWILIO_API_KEY_SID?.trim();
+  const apiKeySecret = process.env.TWILIO_API_KEY_SECRET?.trim();
+  if (!accountSid || accountSid.startsWith("SK")) throw new Error("Set TWILIO_ACCOUNT_SID to the Account SID beginning with AC. API Key SIDs beginning with SK belong in TWILIO_API_KEY_SID.");
+  if (apiKeySid && apiKeySecret) return { accountSid, authUsername: apiKeySid, authPassword: apiKeySecret };
+  if (authToken) return { accountSid, authUsername: accountSid, authPassword: authToken };
+  throw new Error("Twilio credentials require TWILIO_AUTH_TOKEN or both TWILIO_API_KEY_SID and TWILIO_API_KEY_SECRET.");
+}
+
+function authorizationHeader(credentials: TwilioCredentials) {
+  return `Basic ${Buffer.from(`${credentials.authUsername}:${credentials.authPassword}`).toString("base64")}`;
 }
 
 function readNotificationConfig(channel: Channel, contentSid?: string) {
@@ -76,7 +84,7 @@ export async function sendPhoneVerificationCode(phoneNumber: string, code: strin
     const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${credentials.accountSid}/Messages.json`, {
       method: "POST",
       headers: {
-        authorization: `Basic ${Buffer.from(`${credentials.accountSid}:${credentials.authToken}`).toString("base64")}`,
+        authorization: authorizationHeader(credentials),
         "content-type": "application/x-www-form-urlencoded",
       },
       body,
@@ -95,7 +103,7 @@ export async function sendPhoneVerificationCode(phoneNumber: string, code: strin
   const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${credentials.accountSid}/Messages.json`, {
     method: "POST",
     headers: {
-      authorization: `Basic ${Buffer.from(`${credentials.accountSid}:${credentials.authToken}`).toString("base64")}`,
+      authorization: authorizationHeader(credentials),
       "content-type": "application/x-www-form-urlencoded",
     },
     body,
@@ -164,7 +172,7 @@ async function sendUserNotification(input: DeliveryInput) {
     const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${config.accountSid}/Messages.json`, {
       method: "POST",
       headers: {
-        authorization: `Basic ${Buffer.from(`${config.accountSid}:${config.authToken}`).toString("base64")}`,
+        authorization: authorizationHeader(config),
         "content-type": "application/x-www-form-urlencoded",
       },
       body,
