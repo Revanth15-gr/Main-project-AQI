@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import styles from "./LoginForm.module.css";
@@ -76,31 +76,6 @@ export function LoginForm() {
     }
   }
 
-  function saveProfileMobile() {
-    const mobile = mobileRef.current?.value.trim() || "";
-    if (!mobile || !mobileRef.current) return false;
-    try {
-      const profile = JSON.parse(window.localStorage.getItem("airguardUser") || "null") as { phone?: string } | null;
-      if (profile?.phone && profile.phone !== mobile) {
-        mobileRef.current.setCustomValidity("Use the same mobile number saved on your AirGuard profile.");
-        mobileRef.current.reportValidity();
-        return false;
-      }
-      window.localStorage.setItem("airguardMobile", mobile);
-    } catch {
-      // Local storage is optional; the entered number remains available in this form.
-    }
-    return true;
-  }
-
-  function prepareDemo(event: MouseEvent<HTMLAnchorElement>) {
-    if (!mobileRef.current?.reportValidity()) {
-      event.preventDefault();
-      return;
-    }
-    if (!saveProfileMobile()) event.preventDefault();
-  }
-
   return (
     <section className={styles.card} aria-labelledby="login-title">
       <div className={styles.mobileBrand} aria-hidden="true">🌿 AIRGUARD</div>
@@ -133,9 +108,9 @@ export function LoginForm() {
       </form>
 
       <div className={styles.divider}><span />OR<span /></div>
-      <Link className={`${styles.button} ${styles.secondary}`} href="/dashboard" onClick={prepareDemo}>Explore demo dashboard</Link>
+      <Link className={`${styles.button} ${styles.secondary}`} href="/legacy/dashboard.html?demo=1">Explore demo dashboard</Link>
       <p className={styles.foot}>New to AirGuard? <Link href="/register">Create an account</Link></p>
-      <p className={styles.note}>Sign-in requires an account with a verified mobile number. The demo dashboard contains public historical data.</p>
+      <p className={styles.note}>Sign-in requires a verified mobile number. You can explore the public demo without signing in.</p>
     </section>
   );
 }

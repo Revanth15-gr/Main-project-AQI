@@ -271,6 +271,7 @@ async function loadLiveHistory(location, days) {
   const description = byId("liveHistoryDescription");
   description.textContent = `Loading up to ${days} days of recent CAMS estimates for ${location.name}…`;
   const params = new URLSearchParams({ latitude: String(location.latitude), longitude: String(location.longitude), name: location.name, state: location.state || "", district: location.district || "", days: String(days) });
+  if (DEMO_MODE) params.set("demo", "1");
   try {
     const response = await fetch(`/api/air-quality/history?${params}`, { cache: "no-store", headers: { accept: "application/json" } });
     const payload = await response.json();
@@ -324,6 +325,7 @@ async function loadLiveLocation(location) {
   if (byId("liveLocationQuery")) byId("liveLocationQuery").value = [location.name, location.district, location.state].filter(Boolean).join(", ");
   byId("liveMessage").textContent = `Loading air-quality data for ${location.name}…`;
   const params = new URLSearchParams({ latitude: String(location.latitude), longitude: String(location.longitude), name: location.name, state: location.state || "", district: location.district || "" });
+  if (DEMO_MODE) params.set("demo", "1");
   try {
     const response = await fetch(`/api/air-quality?${params}`, { cache: "no-store", headers: { accept: "application/json" } });
     const payload = await response.json();

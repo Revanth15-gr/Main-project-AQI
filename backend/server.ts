@@ -12,8 +12,10 @@ const app = express();
 app.disable("x-powered-by");
 
 function authenticated(req: Request, res: Response, nextMiddleware: NextFunction) {
-  const demoDataPaths = new Set(["/current", "/geocode", "/history", "/stations", "/status"]);
-  if (req.method === "GET" && req.query.demo === "1" && demoDataPaths.has(req.path)) return nextMiddleware();
+  const demoDataPaths = new Set(["/", "/current", "/geocode", "/history", "/stations", "/status"]);
+  const originalUrl = new URL(req.originalUrl, "http://localhost");
+  const endpoint = originalUrl.pathname.replace(/^\/api\/air-quality/, "") || "/";
+  if (req.method === "GET" && originalUrl.searchParams.get("demo") === "1" && demoDataPaths.has(endpoint)) return nextMiddleware();
 
   const token = req.cookies?.airguard_token || req.headers.cookie?.match(/(?:^|;\s*)airguard_token=([^;]+)/)?.[1];
   const secret = process.env.JWT_SECRET;
@@ -32,7 +34,6 @@ function authenticated(req: Request, res: Response, nextMiddleware: NextFunction
     res.status(401).json({ error: "Sign in to access your AirGuard data." });
   }
 }
-app.use(express.json({ limit: "32kb" }));
 app.use("/api/air-quality", authenticated);
 
 function selectedLocation(req: Request): AirLocation | null {
@@ -57,7 +58,8 @@ app.get("/api/air-quality/current", async (req, res) => {
 app.get("/api/air-quality/history", async (req, res) => {
   const location = selectedLocation(req);
   if (!location) return res.status(400).json({ error: "Valid latitude and longitude are required." });
-  if (req.query.demo === "1") return res.set("Cache-Control", "no-store").json([]);
+  const demoRequest = new URL(req.originalUrl, "http://localhost").searchParams.get("demo") === "1";
+  if (demoRequest && !req.query.days) return res.set("Cache-Control", "no-store").json([]);
   if (req.query.days) {
     const days = Number(req.query.days);
     if (!Number.isInteger(days) || days < 1 || days > 90) return res.status(400).json({ error: "History range must be between 1 and 90 days." });
