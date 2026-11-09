@@ -42,10 +42,10 @@ export async function POST(request: Request) {
   if (!Number.isInteger(threshold) || threshold < 0 || threshold > 500) return Response.json({ error: "Threshold must be an integer from 0 to 500." }, { status: 400 });
 
   try {
-    const profile = await getMongoDatabase().collection<{ _id: string; phoneNumber?: string; phoneNumberVerified?: boolean }>("user")
-      .findOne({ _id: user._id }, { projection: { phoneNumber: 1, phoneNumberVerified: 1 } });
-    if (!profile?.phoneNumberVerified || !profile.phoneNumber || !isValidE164Phone(profile.phoneNumber)) {
-      return Response.json({ error: "Verify your registered mobile number before enabling AQI alerts." }, { status: 409 });
+    const profile = await getMongoDatabase().collection<{ _id: string; phoneNumber?: string }>("user")
+      .findOne({ _id: user._id }, { projection: { phoneNumber: 1 } });
+    if (!profile?.phoneNumber || !isValidE164Phone(profile.phoneNumber)) {
+      return Response.json({ error: "A valid mobile number is required before enabling AQI alerts." }, { status: 409 });
     }
     const preference = await notificationPreferencesCollection().findOne({ userId: user._id });
     if (!preference?.consentedAt || (!preference.smsEnabled && !preference.whatsappEnabled)) {

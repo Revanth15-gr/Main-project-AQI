@@ -34,11 +34,11 @@ export async function POST(request: Request) {
 
     for (const preference of preferences) {
       const [profile, channels] = await Promise.all([
-        getMongoDatabase().collection<{ _id: string; phoneNumber?: string; phoneNumberVerified?: boolean }>("user")
-          .findOne({ _id: preference.userId }, { projection: { phoneNumber: 1, phoneNumberVerified: 1 } }),
+        getMongoDatabase().collection<{ _id: string; phoneNumber?: string }>("user")
+          .findOne({ _id: preference.userId }, { projection: { phoneNumber: 1 } }),
         notificationPreferencesCollection().findOne({ userId: preference.userId }),
       ]);
-      if (!profile?.phoneNumberVerified || !profile.phoneNumber || !channels?.consentedAt || (!channels.smsEnabled && !channels.whatsappEnabled)) {
+      if (!profile?.phoneNumber || !channels?.consentedAt || (!channels.smsEnabled && !channels.whatsappEnabled)) {
         skipped += 1;
         continue;
       }

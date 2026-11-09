@@ -58,7 +58,7 @@ function initLiveAirQuality() {
       <button class="btn btn-primary" type="submit">Enable AQI alert for this location</button>
     </form>
     <section class="panel" style="margin-top:1rem;padding:1rem" aria-labelledby="notificationSettingsTitle">
-      <h3 id="notificationSettingsTitle">Verified mobile and notification settings</h3>
+      <h3 id="notificationSettingsTitle">Mobile and notification settings</h3>
       <p id="registeredMobile" class="tiny-note">Loading your account mobile number…</p>
       <form id="notificationPreferencesForm" class="live-search-form">
         <label class="check-label"><input id="smsNotificationsEnabled" type="checkbox"> SMS alerts</label>
@@ -585,14 +585,14 @@ async function loadNotificationSettings() {
   try {
     const settings = await notificationApi("/api/notifications/preferences");
     byId("registeredMobile").textContent = settings.phone
-      ? `Registered mobile: ${settings.phone} · ${settings.phoneVerified ? "verified" : "not verified"}`
+      ? `Registered mobile: ${settings.phone} · available as your alert recipient`
       : "No registered mobile number is saved on this account.";
     byId("smsNotificationsEnabled").checked = settings.smsEnabled;
     byId("whatsappNotificationsEnabled").checked = settings.whatsappEnabled;
     byId("notificationConsent").checked = Boolean(settings.consentedAt);
-    byId("notificationSettingsMessage").textContent = "Preferences apply to your verified profile number. This browser never chooses the recipient.";
+    byId("notificationSettingsMessage").textContent = "Preferences apply to your registered profile number. This browser never chooses the recipient.";
   } catch (error) {
-    byId("registeredMobile").textContent = "Sign in to view your verified mobile number and manage notification preferences.";
+    byId("registeredMobile").textContent = "Sign in to view your registered mobile number and manage notification preferences.";
     byId("notificationSettingsMessage").textContent = error instanceof Error ? error.message : "Account settings are unavailable.";
   }
 
@@ -782,7 +782,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           threshold: Number(byId("whatsappAlertThreshold").value),
         }),
       });
-      byId("liveMessage").textContent = "AQI alert threshold saved for your verified number and selected channels.";
+      byId("liveMessage").textContent = "AQI alert threshold saved for your registered number and selected channels.";
     } catch (error) {
       byId("liveMessage").textContent = error instanceof Error ? error.message : "WhatsApp alert setup is temporarily unavailable.";
     }

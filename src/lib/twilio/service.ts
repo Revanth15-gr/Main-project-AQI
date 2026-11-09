@@ -124,12 +124,12 @@ async function sendUserNotification(input: DeliveryInput) {
 
   await ensureNotificationIndexes();
   const [user, preference] = await Promise.all([
-    getMongoDatabase().collection<{ _id: string; phoneNumber?: string; phoneNumberVerified?: boolean }>("user").findOne({ _id: input.userId }),
+    getMongoDatabase().collection<{ _id: string; phoneNumber?: string }>("user").findOne({ _id: input.userId }),
     notificationPreferencesCollection().findOne({ userId: input.userId }),
   ]);
   if (!user) throw new Error("User profile was not found.");
-  if (!user.phoneNumberVerified || !user.phoneNumber || !isValidE164Phone(user.phoneNumber)) {
-    throw new Error("A verified mobile number is required before sending notifications.");
+  if (!user.phoneNumber || !isValidE164Phone(user.phoneNumber)) {
+    throw new Error("A valid mobile number is required before sending notifications.");
   }
   if (!preference?.consentedAt) throw new Error("Notification consent is required.");
   if (input.channel === "sms" && !preference.smsEnabled) throw new Error("SMS notifications are disabled for this user.");

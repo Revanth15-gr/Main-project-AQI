@@ -110,7 +110,7 @@ export function LoginForm() {
       <div className={styles.divider}><span />OR<span /></div>
       <Link className={`${styles.button} ${styles.secondary}`} href="/legacy/dashboard.html?demo=1">Explore demo dashboard</Link>
       <p className={styles.foot}>New to AirGuard? <Link href="/register">Create an account</Link></p>
-      <p className={styles.note}>Sign-in requires a verified mobile number. You can explore the public demo without signing in.</p>
+      <p className={styles.note}>Use the mobile number saved to your account. No OTP is required to sign in; the public demo is available without an account.</p>
     </section>
   );
 }

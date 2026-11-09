@@ -13,14 +13,14 @@ export async function GET(request: Request) {
   const sessionUser = await authenticatedUser(request);
   if (!sessionUser) return Response.json({ error: "Sign in to manage notification preferences." }, { status: 401 });
   try {
-    const user = await getMongoDatabase().collection<{ _id: string; phoneNumber?: string; phoneNumberVerified?: boolean }>("user")
-      .findOne({ _id: sessionUser._id }, { projection: { phoneNumber: 1, phoneNumberVerified: 1 } });
+    const user = await getMongoDatabase().collection<{ _id: string; phoneNumber?: string }>("user")
+      .findOne({ _id: sessionUser._id }, { projection: { phoneNumber: 1 } });
     if (!user) return Response.json({ error: "User profile was not found." }, { status: 404 });
     await ensureNotificationIndexes();
     const preference = await notificationPreferencesCollection().findOne({ userId: sessionUser._id });
     return Response.json({
       phone: user.phoneNumber ? maskPhoneNumber(user.phoneNumber) : null,
-      phoneVerified: user.phoneNumberVerified === true,
+      phoneValid: Boolean(user.phoneNumber),
       smsEnabled: preference?.smsEnabled || false,
       whatsappEnabled: preference?.whatsappEnabled || false,
       consentedAt: preference?.consentedAt || null,
@@ -44,11 +44,11 @@ export async function PATCH(request: Request) {
   if (enabled && body.consent !== true) return Response.json({ error: "Explicit notification consent is required." }, { status: 400 });
 
   try {
-    const profile = await getMongoDatabase().collection<{ _id: string; phoneNumber?: string; phoneNumberVerified?: boolean }>("user")
-      .findOne({ _id: sessionUser._id }, { projection: { phoneNumber: 1, phoneNumberVerified: 1 } });
+    const profile = await getMongoDatabase().collection<{ _id: string; phoneNumber?: string }>("user")
+      .findOne({ _id: sessionUser._id }, { projection: { phoneNumber: 1 } });
     if (!profile) return Response.json({ error: "User profile was not found." }, { status: 404 });
-    if (enabled && (!profile.phoneNumberVerified || !profile.phoneNumber)) {
-      return Response.json({ error: "Verify your mobile number before enabling notifications." }, { status: 409 });
+    if (enabled && !profile.phoneNumber) {
+      return Response.json({ error: "Add a mobile number before enabling notifications." }, { status: 409 });
     }
     await ensureNotificationIndexes();
     const consentedAt = body.consent === true ? new Date() : null;

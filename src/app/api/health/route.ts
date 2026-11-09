@@ -10,7 +10,7 @@ export async function GET() {
   const twilioReady = process.env.TWILIO_ENABLED === "true" &&
     Boolean(process.env.TWILIO_ACCOUNT_SID?.trim() &&
       (process.env.TWILIO_AUTH_TOKEN?.trim() || (process.env.TWILIO_API_KEY_SID?.trim() && process.env.TWILIO_API_KEY_SECRET?.trim())) &&
-      process.env.TWILIO_WHATSAPP_NUMBER?.trim() && process.env.TWILIO_WHATSAPP_OTP_CONTENT_SID?.trim() &&
+      process.env.TWILIO_WHATSAPP_NUMBER?.trim() &&
       process.env.TWILIO_WHATSAPP_GENERIC_CONTENT_SID?.trim() && process.env.TWILIO_WHATSAPP_CONTENT_SID?.trim());
   let localAiReady = false;
   try { localAiReady = ["localhost", "127.0.0.1"].includes(new URL(process.env.AI_BASE_URL || "https://api.openai.com/v1/chat/completions").hostname); }

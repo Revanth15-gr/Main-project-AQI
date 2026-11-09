@@ -32,7 +32,7 @@ export type AppUser = {
   updatedAt?: Date;
 };
 
-export type PublicUser = Pick<AppUser, "_id" | "email" | "name" | "phoneNumber" | "phoneNumberVerified">;
+export type PublicUser = Pick<AppUser, "_id" | "email" | "name" | "phoneNumber">;
 
 function jwtSecret() {
   const secret = process.env.JWT_SECRET;
@@ -110,7 +110,7 @@ export function clearSessionCookie() {
 }
 
 export function publicUser(user: AppUser): PublicUser {
-  return { _id: user._id, email: user.email, name: user.name, phoneNumber: user.phoneNumber, phoneNumberVerified: user.phoneNumberVerified };
+  return { _id: user._id, email: user.email, name: user.name, phoneNumber: user.phoneNumber };
 }
 
 export async function authenticateRequest(request: Request): Promise<AppUser | null> {
@@ -119,7 +119,7 @@ export async function authenticateRequest(request: Request): Promise<AppUser | n
   const claims = verifySessionToken(token);
   if (!claims) return null;
   const user = await getMongoDatabase().collection<AppUser>("user").findOne({ _id: claims.userId });
-  return user?.phoneNumberVerified ? user : null;
+  return user || null;
 }
 
 export async function authenticateToken(token: string | undefined): Promise<AppUser | null> {
@@ -127,5 +127,5 @@ export async function authenticateToken(token: string | undefined): Promise<AppU
   const claims = verifySessionToken(token);
   if (!claims) return null;
   const user = await getMongoDatabase().collection<AppUser>("user").findOne({ _id: claims.userId });
-  return user?.phoneNumberVerified ? user : null;
+  return user || null;
 }

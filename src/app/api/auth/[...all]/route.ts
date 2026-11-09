@@ -23,8 +23,8 @@ async function readJson(request: Request) {
   } catch { return null; }
 }
 
-function setSessionCookie(user: AppUser, body: Record<string, unknown> = {}) {
-  return Response.json({ ...body, user: publicUser(user) }, { headers: { "Set-Cookie": sessionCookie(createSessionToken(user)) } });
+function setSessionCookie(user: AppUser, body: Record<string, unknown> = {}, status = 200) {
+  return Response.json({ ...body, user: publicUser(user) }, { status, headers: { "Set-Cookie": sessionCookie(createSessionToken(user)) } });
 }
 
 function requestIdentity(request: Request, value: string) {
@@ -52,8 +52,6 @@ async function register(request: Request) {
     const existing = await users().findOne({ $or: [{ email }, { phoneNumber }] }, { projection: { email: 1 } });
     if (existing) return jsonError("An account already uses this email or mobile number. Sign in or recover your account.", 409);
     const { salt, hash } = hashPassword(password);
-    const otp = makeOtp();
-    const otpSalt = randomBytes(16).toString("hex");
     const user: AppUser = {
       _id: randomUUID(), email, name, phoneNumber, phoneNumberVerified: false,
       passwordHash: hash, passwordSalt: salt,
@@ -61,67 +59,14 @@ async function register(request: Request) {
       location: typeof body.location === "string" ? body.location.trim().slice(0, 100) : undefined,
       diseases: Array.isArray(body.diseases) ? body.diseases.filter((item): item is string => typeof item === "string").slice(0, 20) : [],
       healthInformation: typeof body.healthInformation === "string" ? body.healthInformation.slice(0, 300) : "",
-      otpHash: hashOtp(otp, otpSalt), otpExpiresAt: new Date(Date.now() + OTP_TTL_MS), otpAttemptCount: 0,
       createdAt: new Date(), updatedAt: new Date(),
     };
-    Object.assign(user, { otpSalt });
     await users().insertOne(user);
-    try {
-      const delivery = await sendPhoneVerificationCode(phoneNumber, otp);
-      return Response.json({ pendingVerification: true, channel: delivery.channel, message: `Account created. Enter the ${delivery.channel === "whatsapp" ? "WhatsApp" : "SMS"} code to verify your mobile.` }, { status: 201 });
-    } catch {
-      return Response.json({ pendingVerification: true, error: "Account saved, but the SMS code could not be sent. Configure Twilio, then request a new code." }, { status: 503 });
-    }
+    return setSessionCookie(user, { created: true }, 201);
   } catch (error) {
     if (error && typeof error === "object" && "code" in error && error.code === 11000) return jsonError("An account already uses this email or mobile number.", 409);
     return jsonError("Could not create the account. Check MongoDB and Twilio configuration.", 503);
   }
-}
-
-async function resendVerification(request: Request) {
-  const body = await readJson(request);
-  if (!body) return jsonError("Expected a JSON request body.", 400);
-  const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
-  const phoneNumber = typeof body.phoneNumber === "string" ? body.phoneNumber.trim() : "";
-  if (!email || !isValidE164Phone(phoneNumber)) return jsonError("Enter the email and mobile number used for registration.", 400);
-  if (!await consumeRateLimit("registration-otp", requestIdentity(request, phoneNumber), 3, 60)) return jsonError("Wait a minute before requesting another code.", 429);
-  try {
-    const user = await users().findOne({ email, phoneNumber, phoneNumberVerified: false });
-    if (!user) return jsonError("No pending registration matches those details.", 404);
-    const otp = makeOtp();
-    const otpSalt = randomBytes(16).toString("hex");
-    await users().updateOne({ _id: user._id }, { $set: { otpHash: hashOtp(otp, otpSalt), otpSalt, otpExpiresAt: new Date(Date.now() + OTP_TTL_MS), otpAttemptCount: 0, updatedAt: new Date() } });
-    const delivery = await sendPhoneVerificationCode(phoneNumber, otp);
-    return Response.json({ sent: true, channel: delivery.channel });
-  } catch { return jsonError("Could not send the verification code. Check Twilio configuration.", 503); }
-}
-
-async function verifyPhone(request: Request) {
-  const body = await readJson(request);
-  if (!body) return jsonError("Expected a JSON request body.", 400);
-  const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
-  const code = typeof body.code === "string" ? body.code.trim() : "";
-  if (!email || !/^\d{6}$/.test(code)) return jsonError("Enter the email used for registration and the six-digit code.", 400);
-  if (!await consumeRateLimit("verify-otp", requestIdentity(request, email), 6, 10 * 60)) return jsonError("Too many verification attempts. Request a new code later.", 429);
-  try {
-    const user = await users().findOne({ email, phoneNumberVerified: false });
-    if (!user?.otpHash || !user.otpSalt || !user.otpExpiresAt || user.otpExpiresAt <= new Date()) return jsonError("The code has expired. Request a new one.", 400);
-    if ((user.otpAttemptCount || 0) >= 6) return jsonError("Too many incorrect codes. Request a new one.", 429);
-    const expected = Buffer.from(user.otpHash, "hex");
-    const actual = Buffer.from(hashOtp(code, user.otpSalt), "hex");
-    if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) {
-      await users().updateOne({ _id: user._id }, { $inc: { otpAttemptCount: 1 } });
-      return jsonError("The verification code is incorrect.", 400);
-    }
-    const update = await users().updateOne(
-      { _id: user._id, phoneNumberVerified: false, otpHash: user.otpHash, otpExpiresAt: { $gt: new Date() } },
-      { $set: { phoneNumberVerified: true, updatedAt: new Date() }, $unset: { otpHash: "", otpSalt: "", otpExpiresAt: "", otpAttemptCount: "" } },
-    );
-    if (!update.modifiedCount) return jsonError("This verification code was already used or expired.", 409);
-    const verifiedUser = await users().findOne({ _id: user._id });
-    if (!verifiedUser) return jsonError("Could not load the verified account.", 503);
-    return setSessionCookie(verifiedUser, { verified: true });
-  } catch { return jsonError("Could not verify the mobile number.", 503); }
 }
 
 async function login(request: Request) {
@@ -135,8 +80,7 @@ async function login(request: Request) {
   try {
     const user = await users().findOne({ email });
     if (!user?.passwordHash || !user.passwordSalt || !verifyPassword(password, user.passwordSalt, user.passwordHash)) return jsonError("Email or password is incorrect.", 401);
-    if (!user.phoneNumberVerified) return jsonError("Verify your mobile number before signing in.", 403);
-    if (user.phoneNumber !== phoneNumber) return jsonError("Enter the verified mobile number registered to this account.", 403);
+    if (user.phoneNumber !== phoneNumber) return jsonError("Enter the mobile number registered to this account.", 403);
     return setSessionCookie(user, { signedIn: true });
   } catch { return jsonError("Sign-in is temporarily unavailable. Check MongoDB connectivity.", 503); }
 }
@@ -207,8 +151,6 @@ export async function POST(request: Request) {
   try {
     if (path === "/api/auth/logout") return Response.json({ signedOut: true }, { headers: { "Set-Cookie": clearSessionCookie() } });
     if (path === "/api/auth/register") return await register(request);
-    if (path === "/api/auth/verify-phone") return await verifyPhone(request);
-    if (path === "/api/auth/resend-verification") return await resendVerification(request);
     if (path === "/api/auth/login") return await login(request);
     if (path === "/api/auth/phone/send-otp") return await sendPhoneUpdateCode(request);
     if (path === "/api/auth/phone/verify") return await verifyPhoneUpdate(request);
